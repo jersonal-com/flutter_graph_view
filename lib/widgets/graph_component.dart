@@ -27,7 +27,6 @@ class GraphComponent extends FlameGame
   late Options options;
 
   ValueNotifier<double> scale = ValueNotifier(1);
-  // late final CameraComponent cameraComponent;
 
   GraphComponent({
     required this.data,
@@ -35,8 +34,12 @@ class GraphComponent extends FlameGame
     required this.context,
     required this.convertor,
     Options? options,
+    CameraComponent? cameraComponent,
   }) {
     super.camera = CameraComponent(world: world)..ancestors(includeSelf: true);
+    if ( cameraComponent != null) {
+      super.camera.viewfinder = cameraComponent.viewfinder;
+    }
     this.options = options ?? Options();
   }
 

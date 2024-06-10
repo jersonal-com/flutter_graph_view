@@ -11,6 +11,7 @@ export './model//edge.dart';
 
 /// widgets
 export 'flutter_graph_widget.dart';
+export 'flutter_graph_widget_from_graphcomponent.dart';
 export './widgets/graph_component.dart';
 export './widgets/vertex_component.dart';
 export './widgets/edge_component.dart';

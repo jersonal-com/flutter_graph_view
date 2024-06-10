@@ -20,6 +20,8 @@ class PersistenceDemo extends StatefulWidget {
 }
 
 class _PersistenceDemoState extends State<PersistenceDemo> {
+  GraphComponent? graphComponent;
+
   saveVertex(Vertex v) {
     vertexStorage[v.id as String] = v;
   }
@@ -86,12 +88,13 @@ class _PersistenceDemoState extends State<PersistenceDemo> {
       // ForceMotionDecorator(),
     ];
 
-    return FlutterGraphWidget(
+    graphComponent = GraphComponent(
       data: data,
-      algorithm: RandomAlgorithm(
+      convertor: MapConvertor(),
+      algorithm: ForceDirected(
         decorators: decorators,
       ),
-      convertor: MapConvertor(),
+      cameraComponent: graphComponent?.camera,
       options: Options()
         ..enableHit = false
         ..panelDelay = const Duration(milliseconds: 500)
@@ -114,7 +117,30 @@ class _PersistenceDemoState extends State<PersistenceDemo> {
         ..edgePanelBuilder = edgePanelBuilder
         ..vertexPanelBuilder = vertexPanelBuilder
         ..edgeShape = EdgeLineShape() // default is EdgeLineShape.
-        ..vertexShape = VertexCircleShape(), // default is VertexCircleShape.
+        ..vertexShape = VertexCircleShape(),
+      context: context,
+    );
+
+    return Stack(
+      children: [
+        FlutterGraphWidgetFromGraphComponent(
+          graphComponent: graphComponent!,
+        ),
+        Positioned(
+            bottom: 50,
+            right: 50,
+            child: CircleAvatar(
+              backgroundColor: Colors.blueGrey,
+              child: IconButton(
+                onPressed: () {
+                  setState(() {
+                    addNewRandomVertex();
+                  });
+                },
+                icon: const Icon(Icons.add),
+              ),
+            )),
+      ],
     );
   }
 
@@ -164,5 +190,28 @@ class _PersistenceDemoState extends State<PersistenceDemo> {
         )
       ],
     );
+  }
+
+  addNewRandomVertex() {
+    final r = Random();
+    final existingNodeId = r.nextInt(9);
+    final newNodeId = r.nextInt(500) + 10;
+    final newVertex = {
+      'id': 'node$newNodeId',
+      'tag': 'tag${r.nextInt(9)}',
+      'tags': [
+        'tag${r.nextInt(9)}',
+        if (r.nextBool()) 'tag${r.nextInt(4)}',
+        if (r.nextBool()) 'tag${r.nextInt(8)}'
+      ],
+    };
+    final newEdge = {
+      'srcId': 'node$existingNodeId',
+      'dstId': 'node$newNodeId',
+      'edgeName': 'edge${r.nextInt(3)}',
+      'ranking': DateTime.now().millisecond,
+    };
+    data['vertexes'].add(newVertex);
+    data['edges'].add(newEdge);
   }
 }

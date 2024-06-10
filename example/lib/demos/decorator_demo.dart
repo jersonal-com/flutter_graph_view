@@ -79,7 +79,7 @@ class DecoratorDemo extends StatelessWidget {
     return FlutterGraphWidget(
       data: data,
       algorithm: RandomAlgorithm(
-        decorators: decorators1,
+        decorators: decorators2,
       ),
       convertor: MapConvertor(),
       options: Options()

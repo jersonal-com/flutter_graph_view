@@ -34,3 +34,5 @@ migrate_working_dir/
 **/windows/
 .packages
 build/
+example/.metadata
+example/pubspec.lock

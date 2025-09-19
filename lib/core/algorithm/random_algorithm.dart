@@ -16,18 +16,17 @@ class RandomAlgorithm extends GraphAlgorithm {
   void compute(Vertex v, Graph graph) {
     super.compute(v, graph);
     if (v.position == Vector2(0, 0)) {
-      var size = v.cpn!.gameRef.camera.visibleWorldRect;
-      v.radius = math.log(v.degree * 10 + 1) + 5;
+      var size = v.cpn!.game.camera.visibleWorldRect;
+      v.radius = 5;
       v.position = Vector2(math.Random().nextDouble() * (size.width - 50) + 25,
           math.Random().nextDouble() * (size.height - 50) + 25);
     }
   }
 
   @override
-  void onDrag(Vertex hoverVertex, info, Viewfinder viewfinder) {
-    var deltaPosition = info.delta.global;
+  void onDrag(Vertex hoverVertex, Vector2 globalDelta, Viewfinder viewfinder) {
     var zoom = viewfinder.zoom;
-    hoverVertex.position += deltaPosition / zoom;
+    hoverVertex.position += globalDelta / zoom;
     hoverVertex.cpn?.algorithmCompute(this);
   }
 

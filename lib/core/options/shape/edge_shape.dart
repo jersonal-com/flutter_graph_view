@@ -12,6 +12,9 @@ import 'package:flutter_graph_view/flutter_graph_view.dart';
 ///
 /// 用于自定义边的UI
 abstract class EdgeShape {
+  List<EdgeDecorator>? decorators;
+  EdgeShape({this.decorators});
+
   /// render the edge shape to canvas by data.
   ///
   /// 通过边数据将自定义的图形绘制到画布中。
@@ -55,7 +58,7 @@ abstract class EdgeShape {
   /// Compute the line length by two vertex.
   ///
   /// 通过两个节点的坐标，计算线的长度。
-  double len(Edge edge) =>
+  static double len(Edge edge) =>
       edge.end == null || edge.start.cpn == null || edge.end!.cpn == null
           ? 10
           : Util.distance(edge.start.cpn!.position, edge.end!.cpn!.position);

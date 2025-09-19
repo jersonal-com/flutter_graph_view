@@ -25,7 +25,7 @@ class EdgeComponent extends ShapeComponent
 
   EdgeComponent(this.edge, this.graph, this.context)
       : super(
-          position: edge.start.position,
+          position: edge.start.cpn?.position ?? Vector2.zero(),
           anchor: Anchor.centerLeft,
         );
 
@@ -34,7 +34,7 @@ class EdgeComponent extends ShapeComponent
   late final ShapeHitbox? hitBox;
 
   String get overlayName =>
-      'edge${edge.start.id}-${edge.ranking}${edge.end != null ? "-${edge.end!.id}" : ''}';
+      'edge${edge.start.id}-${edge.edgeName}@${edge.ranking}${edge.end != null ? "-${edge.end!.id}" : ''}';
 
   Duration get panelDelay =>
       gameRef.options.panelDelay ?? const Duration(milliseconds: 300);
@@ -77,6 +77,7 @@ class EdgeComponent extends ShapeComponent
   /// 对被鼠标浮入的线增加显视宽度
   @override
   void onHoverEnter() {
+    if (graph.hoverVertex != null) return;
     paint.strokeWidth = 4;
     hitBox?.width = 4;
     gameRef.graph.hoverEdge = edge;

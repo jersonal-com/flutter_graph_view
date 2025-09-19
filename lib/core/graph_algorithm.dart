@@ -4,7 +4,6 @@
 
 import 'dart:math';
 
-import 'package:flame/events.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_graph_view/flutter_graph_view.dart';
 
@@ -18,6 +17,96 @@ abstract class GraphAlgorithm {
   /// 定位算法的装饰器，可多个算法同时使用。
   ///
   List<GraphAlgorithm>? decorators;
+
+  World? world;
+  GraphComponent? graphComponent;
+  GraphAlgorithm? rootAlg;
+
+  Widget Function()? horizontalOverlay;
+  Widget Function()? verticalOverlay;
+  Widget Function()? leftOverlay;
+
+  List<Widget>? horizontalOverlays({
+    required World world,
+    required GraphAlgorithm rootAlg,
+    required GraphComponent graphComponent,
+  }) {
+    setGlobalData(
+        world: world, rootAlg: rootAlg, graphComponent: graphComponent);
+    return [
+      if (horizontalOverlay != null) horizontalOverlay!(),
+      if (decorators != null)
+        ...decorators!
+            .where((alg) => alg.horizontalOverlay != null)
+            .map((ob) => ob.horizontalOverlay!())
+            .toList(),
+    ];
+  }
+
+  void hideVerticalOverlay() {
+    hideOverlay('verticalController');
+  }
+
+  void hideHorizontalOverlay() {
+    hideOverlay('horizontalController');
+  }
+
+  void hideVertexTapUpOverlay() {
+    hideOverlay('vertexTapUpPanel');
+  }
+
+  void hideOverlay(String name) {
+    if (graphComponent?.overlays.activeOverlays.contains(name) == true) {
+      graphComponent?.overlays.remove(name);
+    }
+  }
+
+  List<Widget>? verticalOverlays({
+    required World world,
+    required GraphAlgorithm rootAlg,
+    required GraphComponent graphComponent,
+  }) {
+    setGlobalData(
+        world: world, rootAlg: rootAlg, graphComponent: graphComponent);
+    return [
+      if (verticalOverlay != null) verticalOverlay!(),
+      if (decorators != null)
+        ...decorators!
+            .where((alg) => alg.verticalOverlay != null)
+            .map((ob) => ob.verticalOverlay!())
+            .toList(),
+    ];
+  }
+
+  List<Widget>? leftOverlays({
+    required World world,
+    required GraphAlgorithm rootAlg,
+    required GraphComponent graphComponent,
+  }) {
+    setGlobalData(
+        world: world, rootAlg: rootAlg, graphComponent: graphComponent);
+    return [
+      if (leftOverlay != null) leftOverlay!(),
+      if (decorators != null)
+        ...decorators!
+            .where((alg) => alg.leftOverlay != null)
+            .map((ob) => ob.leftOverlay!())
+            .toList(),
+    ];
+  }
+
+  setGlobalData(
+      {required World world,
+      required GraphAlgorithm rootAlg,
+      required GraphComponent graphComponent}) {
+    this.world = world;
+    this.rootAlg = rootAlg;
+    this.graphComponent = graphComponent;
+    decorators?.forEach((element) {
+      element.setGlobalData(
+          world: world, rootAlg: rootAlg, graphComponent: graphComponent);
+    });
+  }
 
   ///
   ///
@@ -38,6 +127,27 @@ abstract class GraphAlgorithm {
   /// 图形展示的中心点
   Offset get center => Offset((size?.width ?? 0) / 2, (size?.height ?? 0) / 2);
 
+  @mustCallSuper
+  void afterDrag(Vertex vertex, Vector2 globalDelta) {
+    for (GraphAlgorithm decorator in decorators ?? []) {
+      decorator.afterDrag(vertex, globalDelta);
+    }
+  }
+
+  @mustCallSuper
+  beforeMerge(dynamic data) {
+    for (GraphAlgorithm decorator in decorators ?? []) {
+      decorator.beforeMerge(data);
+    }
+  }
+
+  @mustCallSuper
+  void beforeLoad(data) {
+    for (GraphAlgorithm decorator in decorators ?? []) {
+      decorator.beforeLoad(data);
+    }
+  }
+
   void onGraphLoad(Graph graph) {}
 
   /// Nodes zoom offset from center.
@@ -51,9 +161,14 @@ abstract class GraphAlgorithm {
   void compute(Vertex v, Graph graph) {
     if (decorators != null) {
       for (var decorator in decorators!) {
+        if (!decorator.needContinue(v)) return;
         decorator.compute(v, graph);
       }
     }
+  }
+
+  bool needContinue(Vertex v) {
+    return true;
   }
 
   /// Called when the graph is loaded.
@@ -91,15 +206,15 @@ abstract class GraphAlgorithm {
     }
   }
 
-  void onDrag(Vertex hoverVertex, DragUpdateInfo info, Viewfinder viewfinder) {
-    var deltaPosition = info.delta.global;
+  void onDrag(Vertex hoverVertex, Vector2 globalDelta, Viewfinder viewfinder) {
     var zoom = viewfinder.zoom;
-    hoverVertex.position += deltaPosition / zoom;
+    hoverVertex.position += globalDelta / zoom;
     for (var neighbor in hoverVertex.neighbors) {
       if (neighbor.degree < hoverVertex.degree) {
-        neighbor.position += deltaPosition / zoom;
+        neighbor.position += globalDelta / zoom;
       }
     }
+    afterDrag(hoverVertex, globalDelta);
   }
 
   void onZoomVertex(Vertex vertex, Vector2 pointLocation, double delta) {

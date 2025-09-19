@@ -44,6 +44,8 @@ class Options {
   /// 顶点数据面板的构建器，鼠标悬停到对应节点时触发。
   VertexPanelBuilder? vertexPanelBuilder;
 
+  Widget? vertexTapUpPanel;
+
   /// The builder of the edge data panel, triggered when the mouse hovers.
   ///
   /// 边数据面板的构建器，鼠标悬停到对应节点时触发。
@@ -71,6 +73,7 @@ class Options {
   /// if render legend in canvas.
   ///
   /// 是否展示图例
+  @Deprecated("use LegendDecorator instead. will remove in 1.2.0")
   bool useLegend = true;
 
   /// if enable hit.
@@ -108,8 +111,61 @@ class Options {
   /// @zh: 顶点文字获取器
   String Function(Vertex) textGetter = (Vertex vertex) => '${vertex.id}';
 
+  /// @en: the url getter of vertex image.
+  ///
+  /// @zh: 顶点图片获取器
+  String? Function(Vertex) imgUrlGetter = (Vertex vertex) => null;
+
   /// @en: the delay of overlay disappear.
   ///
   /// @zh: overlay消失的延迟
   Duration? panelDelay;
+
+  /// @en: legend component builder
+  ///
+  /// @zh: 图例组件
+  PositionComponent Function(Color color, int i) legendBuilder = (color, i) {
+    return RectangleComponent.fromRect(Rect.fromLTWH(40, 50.0 + 30 * i, 30, 18),
+        paint: Paint()..color = color);
+  };
+
+  /// @en: default legend text builder
+  ///
+  /// @zh: 默认图例文字构建器
+  TextComponent Function(String tag, int i, Color color, Vector2 position)
+      legendTextBuilder = (tag, i, color, position) {
+    return TextComponent(
+      text: tag,
+      position: Vector2(position.x + 40, position.y - 6),
+    );
+  };
+
+  /// @en: the horizontal controller panel height. Default to `50`
+  ///
+  /// @zh: 水平控制面板的高度。默认为`50`
+  double horizontalControllerHeight = 50;
+
+  /// @en: the vertical controller panel width. Default to `340`
+  ///
+  /// @zh: 垂直控制面板的宽度。默认为`340`
+  double verticalControllerWidth = 340;
+
+  /// @en: the vertex tap up panel width. Default to `430`
+  ///
+  /// @zh: 节点控制面板默认最大宽度，默认值`430`
+  double vertexTapUpPanelWidth = 430;
+
+  /// @en: an custom vertex component constructor.
+  ///
+  /// @zh: 自定义顶点组件构造器
+  VertexComponentNew vertexComponentNew = VertexComponent.new;
+
+  /// @en: control the game pause through external means.
+  /// <br>Suitable for creating multiple flutter_graph_widget
+  /// <br>and keeping alive without causing the game engine to consume too much computation
+  ///
+  /// @zh: 从外部决定游戏是否暂停
+  /// <br>适用于创建了多个 flutter_graph_widget，
+  /// <br>并且 keepAlive 的情况下，又不想让游戏引擎占用过高计算量
+  ValueNotifier<bool> pause = ValueNotifier(false);
 }

@@ -48,6 +48,13 @@ class Vertex<I> {
   /// 获取当前节点的邻居节点。
   List<Vertex<I>> get neighbors => [...nextVertexes, ...prevVertexes];
 
+  /// get the neighbor vertexes of this vertex.
+  ///
+  /// 获取当前节点与另一个节点的共同邻居节点。
+  Set<Vertex<I>> sameNeighbors(Vertex<I> vertex) {
+    return neighbors.toSet().intersection(vertex.neighbors.toSet());
+  }
+
   /// The degree of this vertex.
   /// 当前节点总的【度】数量
   int _degree = 0;
@@ -56,7 +63,6 @@ class Vertex<I> {
 
   set degree(d) {
     _degree = d;
-    radius = (math.log(degree * 10 + 1)) + 5;
   }
 
   /// Whether this vertex being picked.
@@ -78,9 +84,12 @@ class Vertex<I> {
   /// The origin data of this vertex.
   late dynamic data;
 
+  double _radius = 5;
+  set radius(double radius) => _radius = radius;
+
   /// The radius of this vertex, that which assigment by StyleConfiguration.
   /// 节点的默认半径，用于被样式选项设置器进行修改以更新图形
-  late double radius = 10;
+  double get radius => (math.log(degree * 10 + 1)) + _radius;
 
   /// The size of this vertex
   ///
@@ -90,6 +99,8 @@ class Vertex<I> {
   double get radiusZoom {
     return cpn == null ? radius : radius / cpn!.game.camera.viewfinder.zoom;
   }
+
+  double get zoom => cpn!.game.camera.viewfinder.zoom;
 
   Vertex();
 
@@ -128,4 +139,10 @@ class Vertex<I> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) || (other is Vertex && other.id == id);
+
+  double angle(Vertex v, Vertex b) {
+    var vc = v.position - position;
+    var bc = b.position - position;
+    return vc.angleTo(bc);
+  }
 }

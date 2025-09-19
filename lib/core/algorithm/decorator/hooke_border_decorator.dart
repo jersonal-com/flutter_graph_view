@@ -2,8 +2,7 @@
 //
 // This source code is licensed under Apache 2.0 License.
 
-import 'dart:ui';
-
+import 'package:flutter/material.dart';
 import 'package:flutter_graph_view/flutter_graph_view.dart';
 
 extension RectExt on Rect {
@@ -33,20 +32,28 @@ class HookeBorderDecorator extends ForceDecorator {
   /// 如果为true，则节点会受到屏幕边界的排斥力
   /// 如果为false，则节点在遇到力平衡时会停止位置调整
   bool alwaysInScreen;
+
+  Widget Function(HookeBorderDecorator)? handleOverlay;
+
+  @override
+  Widget Function()? get verticalOverlay =>
+      handleOverlay != null ? () => handleOverlay!(this) : null;
+
   HookeBorderDecorator({
     this.borderFactor = 0.3,
     this.k = 0.3,
     this.alwaysInScreen = true,
+    this.handleOverlay,
     super.decorators,
   });
 
   Vector2 hooke(Vertex s, Graph graph) {
     var viewport = (alwaysInScreen
-            ? s.cpn!.gameRef.camera.visibleWorldRect
-            : Rect.fromPoints(Offset.zero, s.cpn!.gameRef.size.toOffset())) *
+            ? s.cpn!.game.camera.visibleWorldRect
+            : Rect.fromPoints(Offset.zero, s.cpn!.game.size.toOffset())) *
         borderFactor;
     var widthScale = 0;
-    var p = s.position;
+    var p = s.cpn!.position;
     double fx = 0;
     double fy = 0;
     if (p.x < viewport.left + widthScale) {

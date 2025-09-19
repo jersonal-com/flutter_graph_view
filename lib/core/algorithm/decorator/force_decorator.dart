@@ -10,7 +10,13 @@ import 'package:flutter_graph_view/flutter_graph_view.dart';
 ///
 /// 计算顶点的总力的装饰器。
 class ForceDecorator extends GraphAlgorithm {
-  ForceDecorator({super.decorators});
+  double? sameSrcAndDstFactor;
+  double sameTagsFactor;
+  ForceDecorator({
+    super.decorators,
+    this.sameSrcAndDstFactor,
+    this.sameTagsFactor = 1,
+  });
 
   @override
   void onLoad(Vertex v) {
@@ -29,7 +35,7 @@ class ForceDecorator extends GraphAlgorithm {
     if (v.position == Vector2.zero() || d.position == Vector2.zero()) return;
     var forceMap = v.cpn!.properties['forceMap']
         as Map<GraphAlgorithm, Map<Vertex, Vector2>>;
-    forceMap[this]![d] = force;
+    forceMap[this]![d] = computeSameTagsFactor(force, v, d);
   }
 
   _setForce(Vertex v) {
@@ -54,5 +60,24 @@ class ForceDecorator extends GraphAlgorithm {
   void compute(Vertex v, Graph graph) {
     super.compute(v, graph);
     _setForce(v);
+  }
+
+  Vector2 computeSameTagsFactor(Vector2 f, Vertex v, Vertex b) {
+    if (v.tags != null && b.tags != null) {
+      var sameTags = v.tags!.where((element) => b.tags!.contains(element));
+      if (sameTags.isNotEmpty) {
+        f = f * sameTagsFactor;
+      }
+    }
+    return f;
+  }
+
+  double computeSameSrcAndDstFactor(Vertex v, Vertex b) {
+    // 从 neighbors 中找到相同起止点
+    var vn = [...v.prevVertexes]..removeWhere((rv) => rv == v);
+    var bn = [...b.prevVertexes]..removeWhere((rv) => rv == b);
+    vn.removeWhere((rv) => !bn.contains(rv));
+    if (vn.isEmpty) return 1;
+    return pow(sameSrcAndDstFactor ?? 1, vn.length - 1).toDouble();
   }
 }

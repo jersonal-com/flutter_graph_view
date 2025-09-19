@@ -18,7 +18,7 @@ class VertexComponent extends ShapeComponent
     with
         TapCallbacks,
         HoverCallbacks,
-        HasGameRef<GraphComponent>,
+        HasGameReference<GraphComponent>,
         CollisionCallbacks
     implements SizeProvider {
   late Vertex vertex;
@@ -41,6 +41,7 @@ class VertexComponent extends ShapeComponent
   }) : super(
           position: vertex.position,
           anchor: Anchor.center,
+          priority: 1,
         );
 
   final Map<String, dynamic> properties = {};
@@ -50,9 +51,9 @@ class VertexComponent extends ShapeComponent
   String get overlayName => 'vertex${vertex.id}';
 
   Duration get panelDelay =>
-      gameRef.options.panelDelay ?? const Duration(milliseconds: 300);
+      game.options.panelDelay ?? const Duration(milliseconds: 300);
 
-  bool get hasPanel => gameRef.options.vertexPanelBuilder != null;
+  bool get hasPanel => game.options.vertexPanelBuilder != null;
 
   @override
   FutureOr<void> onLoad() {
@@ -65,11 +66,11 @@ class VertexComponent extends ShapeComponent
   }
 
   void loadOverlay() {
-    var panelBuilder = gameRef.options.vertexPanelBuilder;
+    var panelBuilder = game.options.vertexPanelBuilder;
     if (!hasPanel) return;
 
-    gameRef.overlays.addEntry(overlayName, (_, game) {
-      return panelBuilder!(vertex, gameRef.camera.viewfinder);
+    game.overlays.addEntry(overlayName, (_, g) {
+      return panelBuilder!(vertex, game.camera.viewfinder);
     });
   }
 
@@ -93,21 +94,25 @@ class VertexComponent extends ShapeComponent
   void render(Canvas canvas) =>
       vertexShape.render(vertex, canvas, paint, paintLayers);
 
-  VertexShape get vertexShape => gameRef.options.vertexShape;
+  VertexShape get vertexShape => game.options.vertexShape;
 
   @override
   void update(double dt) {
     super.update(dt);
+    vertexUpdate();
+  }
+
+  vertexUpdate() {
     size = vertexShape.size(vertex);
-    algorithm.$size.value = Size(gameRef.size.x, gameRef.size.y);
+    algorithm.$size.value = Size(game.size.x, game.size.y);
 
     algorithmCompute(algorithm);
     hitBox?.position = position;
     if (hitBox != null) vertexShape.updateHitBox(vertex, hitBox!);
     vertexShape.setPaint(vertex);
 
-    position.x += (vertex.position.x - position.x) * dt * speed;
-    position.y += (vertex.position.y - position.y) * dt * speed;
+    position.x = vertex.position.x;
+    position.y = vertex.position.y;
     if (Util.distance(position, vertex.position) < 1 && !collisionEnable) {
       collisionEnable = true;
     }
@@ -119,7 +124,7 @@ class VertexComponent extends ShapeComponent
     if (hasPanel) {
       Future.delayed(panelDelay, () {
         if (isHovered) {
-          gameRef.overlays.add(overlayName);
+          game.overlays.add(overlayName);
         }
       });
     }
@@ -130,16 +135,18 @@ class VertexComponent extends ShapeComponent
     graph.hoverVertex = null;
     if (hasPanel) {
       Future.delayed(panelDelay, () {
-        gameRef.overlays.remove(overlayName);
+        game.overlays.remove(overlayName);
       });
     }
   }
 
-  onDrag(DragUpdateInfo e) {
+  @mustCallSuper
+  void onDrag(Vector2 globalDelta) {
     if (hasPanel) {
-      gameRef.overlays.remove(overlayName);
-      gameRef.overlays.add(overlayName);
+      game.overlays.remove(overlayName);
+      game.overlays.add(overlayName);
     }
+    algorithm.afterDrag(vertex, globalDelta);
   }
 
   @override
@@ -178,7 +185,7 @@ class VertexComponent extends ShapeComponent
   }
 
   String? displayName() {
-    var txt = gameRef.options.textGetter.call(vertex);
+    var txt = game.options.textGetter.call(vertex);
     return '${vertex.id}${txt != vertex.id ? " ($txt) " : ""}';
   }
 }

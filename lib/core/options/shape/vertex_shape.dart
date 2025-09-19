@@ -10,6 +10,9 @@ import 'package:flutter_graph_view/flutter_graph_view.dart';
 ///
 /// 用于自定义节点的UI。
 abstract class VertexShape {
+  VertexShape({this.decorators});
+  List<VertexDecorator>? decorators;
+
   /// render the vertex shape to canvas by data.
   ///
   /// 通过节点数据将自定义的图形绘制到画布中。
@@ -52,7 +55,7 @@ abstract class VertexShape {
   /// 当一些元素被激活且不包含当前元素
   bool isWeaken(Vertex vertex) {
     var cpn = vertex.cpn!;
-    var graph = cpn.gameRef.graph;
+    var graph = cpn.game.graph;
     return (graph.hoverVertex != null &&
             (vertex != graph.hoverVertex &&
                 !graph.hoverVertex!.neighbors.contains(vertex)) ||

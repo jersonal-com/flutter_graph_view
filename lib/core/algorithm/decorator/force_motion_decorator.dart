@@ -9,7 +9,7 @@ import 'package:flutter_graph_view/flutter_graph_view.dart';
 ///
 /// 将顶点的力转换成运动速度并改变节点位置的装饰器。
 class ForceMotionDecorator extends GraphAlgorithm {
-  double unitTime;
+  int unitTime;
   ForceMotionDecorator({this.unitTime = 1, super.decorators});
 
   Vector2 getForce(Vertex v) {
@@ -31,9 +31,13 @@ class ForceMotionDecorator extends GraphAlgorithm {
         // F = m * a
         var f = getForce(v);
         var a = f / v.radius;
-        // s = 1/2 * a * t^2
-        var s = a * 0.5 * unitTime;
-        v.position += s;
+        if (a.x.isNaN || a.y.isNaN) {
+          return;
+        } else {
+          // s = 1/2 * a * t^2
+          var s = a * 0.5 * unitTime.toDouble();
+          v.position += s;
+        }
       }
     }
   }
